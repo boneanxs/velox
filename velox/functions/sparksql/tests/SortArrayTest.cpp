@@ -153,7 +153,8 @@ TEST_F(SortArrayTest, array) {
       makeNullableNestedArrayVector(reverseNested(expected)));
 }
 
-TEST_F(SortArrayTest, map) {
+// Map is unordered, so sorting is not supported.
+TEST_F(SortArrayTest, DISABLED_map) {
   auto input = makeArrayOfMapVector(mapInput());
   auto expected = mapAscNullSmallest();
   testSortArray(

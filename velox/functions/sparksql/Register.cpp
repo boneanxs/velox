@@ -328,9 +328,15 @@ void registerFunctions(const std::string& prefix) {
 
   // Register array sort functions.
   exec::registerStatefulVectorFunction(
-      prefix + "array_sort", arraySortSignatures(), makeArraySort);
+      prefix + "array_sort", arraySortSignatures(true), makeArraySortAsc);
+  exec::registerStatefulVectorFunction(
+      prefix + "array_sort_desc", arraySortDescSignatures(), makeArraySortDesc);
   exec::registerStatefulVectorFunction(
       prefix + "sort_array", sortArraySignatures(), makeSortArray);
+
+  exec::registerExpressionRewrite([prefix](const auto& expr) {
+    return rewriteArraySortCall(prefix, expr);
+  });
 
   exec::registerStatefulVectorFunction(
       prefix + "array_repeat",

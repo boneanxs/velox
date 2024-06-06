@@ -149,9 +149,12 @@ void registerArrayFunctions(const std::string& prefix) {
       makeArrayShuffle,
       getMetadataForArrayShuffle());
 
-  VELOX_REGISTER_VECTOR_FUNCTION(udf_array_sort, prefix + "array_sort");
-  VELOX_REGISTER_VECTOR_FUNCTION(
-      udf_array_sort_desc, prefix + "array_sort_desc");
+  exec::registerStatefulVectorFunction(
+      prefix + "array_sort", arraySortSignatures(true), makeArraySortAsc);
+  exec::registerStatefulVectorFunction(
+      prefix + "array_sort_desc",
+      arraySortSignatures(false),
+      makeArraySortDesc);
 
   exec::registerExpressionRewrite([prefix](const auto& expr) {
     return rewriteArraySortCall(prefix, expr);
