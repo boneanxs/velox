@@ -18,7 +18,7 @@
 #include "velox/functions/lib/SimpleComparisonMatcher.h"
 
 namespace facebook::velox::functions::prestosql {
-using namespace facebook::velox::functions::lib;
+using namespace facebook::velox::functions;
 
 class PrestoSimpleComparisonChecker : public SimpleComparisonChecker {
  protected:
@@ -74,6 +74,9 @@ class PrestoSimpleComparisonChecker : public SimpleComparisonChecker {
   std::string eqName(const std::string& prefix) override {
     return prefix + "eq";
   }
+
+ public:
+  ~PrestoSimpleComparisonChecker() override = default;
 };
 
 } // namespace facebook::velox::functions::prestosql

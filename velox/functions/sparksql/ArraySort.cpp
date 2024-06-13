@@ -66,7 +66,7 @@ std::vector<std::shared_ptr<exec::FunctionSignature>>
 arraySortDescSignatures() {
   return {
       exec::FunctionSignatureBuilder()
-          .typeVariable("T")
+          .orderableTypeVariable("T")
           .orderableTypeVariable("U")
           .returnType("array(T)")
           .argumentType("array(T)")
@@ -81,12 +81,12 @@ arraySortDescSignatures() {
 std::vector<std::shared_ptr<exec::FunctionSignature>> sortArraySignatures() {
   return {
       exec::FunctionSignatureBuilder()
-          .typeVariable("T")
+          .orderableTypeVariable("T")
           .argumentType("array(T)")
           .returnType("array(T)")
           .build(),
       exec::FunctionSignatureBuilder()
-          .typeVariable("T")
+          .orderableTypeVariable("T")
           .argumentType("array(T)")
           .constantArgumentType("boolean")
           .returnType("array(T)")

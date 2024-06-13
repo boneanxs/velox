@@ -106,7 +106,7 @@ TEST_F(ArraySortTest, array) {
 }
 
 // Map is unordered, so sorting is not supported.
-TEST_F(ArraySortTest, DISABLED_map) {
+TEST_F(ArraySortTest, failOnMapTypeSort) {
   auto input = makeArrayOfMapVector(mapInput());
   const std::string kErrorMessage =
       "Scalar function signature is not supported"_sv;

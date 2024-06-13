@@ -16,7 +16,7 @@
 
 #include "velox/functions/lib/SimpleComparisonMatcher.h"
 
-namespace facebook::velox::functions::lib {
+namespace facebook::velox::functions {
 
 std::optional<SimpleComparison> SimpleComparisonChecker::isSimpleComparison(
     const std::string& prefix,
@@ -100,4 +100,4 @@ std::optional<SimpleComparison> SimpleComparisonChecker::isSimpleComparison(
   return {{transform, b1}};
 }
 
-} // namespace facebook::velox::functions::lib
+} // namespace facebook::velox::functions

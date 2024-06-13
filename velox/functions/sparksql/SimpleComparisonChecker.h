@@ -18,7 +18,7 @@
 #include "velox/functions/lib/SimpleComparisonMatcher.h"
 
 namespace facebook::velox::functions::sparksql {
-using namespace facebook::velox::functions::lib;
+using namespace facebook::velox::functions;
 
 class SparkComparisonMatcher : public Matcher {
  public:
@@ -105,6 +105,9 @@ class SparkSimpleComparisonChecker : public SimpleComparisonChecker {
   std::string eqName(const std::string& prefix) override {
     return prefix + "equalto";
   }
+
+ public:
+  ~SparkSimpleComparisonChecker() override = default;
 };
 
 } // namespace facebook::velox::functions::sparksql

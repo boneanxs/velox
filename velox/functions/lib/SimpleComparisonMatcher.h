@@ -18,7 +18,7 @@
 #include "velox/core/Expressions.h"
 #include "velox/vector/ConstantVector.h"
 
-namespace facebook::velox::functions::lib {
+namespace facebook::velox::functions {
 
 struct SimpleComparison {
   core::TypedExprPtr expr;
@@ -222,6 +222,7 @@ class SimpleComparisonChecker {
   virtual std::string eqName(const std::string& prefix) = 0;
 
  public:
+  virtual ~SimpleComparisonChecker() = default;
   /// Given a lambda expression, checks it if represents a simple comparator and
   /// returns the summary of the same.
   ///
@@ -245,4 +246,4 @@ class SimpleComparisonChecker {
       const core::LambdaTypedExpr& expr);
 };
 
-} // namespace facebook::velox::functions::lib
+} // namespace facebook::velox::functions
