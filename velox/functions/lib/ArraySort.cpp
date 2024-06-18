@@ -214,7 +214,7 @@ void applyScalarType(
 }
 
 // See documentation at https://prestodb.io/docs/current/functions/array.html
-template <TypeKind T>
+template <TypeKind Kind>
 class ArraySortFunction : public exec::VectorFunction {
  public:
   /// This class implements the array_sort query function. Takes an array as
@@ -248,7 +248,10 @@ class ArraySortFunction : public exec::VectorFunction {
     VectorPtr localResult;
 
     // Input can be constant or flat.
-    if (arg->isConstantEncoding()) {
+    if constexpr (Kind == TypeKind::UNKNOWN) {
+      // All elements are NULL. Hence, sorting doesn't change anything.
+      localResult = arg;
+    } else if (arg->isConstantEncoding()) {
       auto* constantArray = arg->as<ConstantVector<ComplexType>>();
       const auto& flatArray = constantArray->valueVector();
       const auto flatIndex = constantArray->index();
@@ -273,10 +276,10 @@ class ArraySortFunction : public exec::VectorFunction {
     auto inputArray = arg->as<ArrayVector>();
     VectorPtr resultElements;
 
-    if (velox::TypeTraits<T>::isPrimitiveType) {
+    if constexpr (velox::TypeTraits<Kind>::isPrimitiveType) {
       VELOX_DYNAMIC_SCALAR_TYPE_DISPATCH(
           applyScalarType,
-          T,
+          Kind,
           rows,
           inputArray,
           ascending_,
@@ -410,7 +413,12 @@ std::shared_ptr<exec::VectorFunction> create(
     bool ascending,
     bool nullsFirst,
     bool throwOnNestedNull = true) {
-  auto elementType = inputArgs.front().type->childAt(0);
+  const auto elementType = inputArgs.front().type->childAt(0);
+  if (elementType->isUnKnown()) {
+    return createTyped<TypeKind::UNKNOWN>(
+        inputArgs, ascending, nullsFirst, throwOnNestedNull);
+  }
+
   return VELOX_DYNAMIC_TYPE_DISPATCH(
       createTyped,
       elementType->kind(),
