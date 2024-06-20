@@ -42,6 +42,7 @@
 #include "velox/functions/sparksql/RegexFunctions.h"
 #include "velox/functions/sparksql/RegisterArithmetic.h"
 #include "velox/functions/sparksql/RegisterCompare.h"
+#include "velox/functions/sparksql/SimpleComparisonMatcher.h"
 #include "velox/functions/sparksql/Size.h"
 #include "velox/functions/sparksql/SparkPartitionId.h"
 #include "velox/functions/sparksql/String.h"
@@ -334,8 +335,9 @@ void registerFunctions(const std::string& prefix) {
   exec::registerStatefulVectorFunction(
       prefix + "sort_array", sortArraySignatures(), makeSortArray);
 
-  exec::registerExpressionRewrite([prefix](const auto& expr) {
-    return rewriteArraySortCall(prefix, expr);
+  auto checker = std::make_shared<SparkSimpleComparisonChecker>();
+  exec::registerExpressionRewrite([prefix, checker](const auto& expr) {
+    return rewriteArraySortCall(prefix, expr, checker);
   });
 
   exec::registerStatefulVectorFunction(

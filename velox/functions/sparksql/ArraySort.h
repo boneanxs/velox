@@ -28,7 +28,7 @@ std::shared_ptr<exec::VectorFunction> makeArraySortAsc(
 // and the second argument is a lambda function that to map the array elements
 // to the values to sort by.
 //
-// This function is only used inside rewriteArraySortCall.
+// This function is only used in rewriteArraySortCall.
 std::shared_ptr<exec::VectorFunction> makeArraySortDesc(
     const std::string& name,
     const std::vector<exec::VectorFunctionArg>& inputArgs,
@@ -41,19 +41,5 @@ std::shared_ptr<exec::VectorFunction> makeSortArray(
 
 std::vector<std::shared_ptr<exec::FunctionSignature>> arraySortDescSignatures();
 std::vector<std::shared_ptr<exec::FunctionSignature>> sortArraySignatures();
-
-/// Analyzes array_sort(array, lambda) call to determine whether it can be
-/// re-written into a simpler call that specifies sort-by expression.
-///
-/// For example, rewrites
-///     array_sort(a, (x, y) -> if(length(x) < length(y), -1, if(length(x) >
-///     length(y), 1, 0))
-/// into
-///     array_sort(a, x -> length(x))
-///
-/// Returns new expression or nullptr if rewrite is not possible.
-core::TypedExprPtr rewriteArraySortCall(
-    const std::string& prefix,
-    const core::TypedExprPtr& expr);
 
 } // namespace facebook::velox::functions::sparksql

@@ -18,7 +18,7 @@
 
 #include "velox/expression/EvalCtx.h"
 #include "velox/expression/Expr.h"
-#include "velox/expression/VectorFunction.h"
+#include "velox/functions/lib/ArraySort.h"
 #include "velox/functions/lib/LambdaFunctionUtil.h"
 #include "velox/functions/lib/RowsTranslationUtil.h"
 #include "velox/type/FloatingPointUtil.h"
@@ -99,7 +99,13 @@ void applyComplexType(
     bool throwOnNestedNull) {
   auto inputElements = inputArray->elements();
   auto indices = sortElements(
-      rows, *inputArray, *inputElements, ascending, nullsFirst, context, throwOnNestedNull);
+      rows,
+      *inputArray,
+      *inputElements,
+      ascending,
+      nullsFirst,
+      context,
+      throwOnNestedNull);
   resultElements = BaseVector::transpose(indices, std::move(inputElements));
 }
 
@@ -161,13 +167,14 @@ void applyScalarType(
         }
       }
     } else {
-    // Move nulls to end of array.
-    for (vector_size_t i = size - 1; i >= 0; --i) {
-      if (flatResults->isNullAt(offset + i)) {
-        swapWithNull<T>(flatResults, offset + size - numNulls - 1, offset + i);
-        ++numNulls;
+      // Move nulls to end of array.
+      for (vector_size_t i = size - 1; i >= 0; --i) {
+        if (flatResults->isNullAt(offset + i)) {
+          swapWithNull<T>(
+              flatResults, offset + size - numNulls - 1, offset + i);
+          ++numNulls;
+        }
       }
-    }
     }
     // Exclude null values while sorting.
     const auto startRow = offset + (nullsFirst ? numNulls : 0);
@@ -233,8 +240,13 @@ class ArraySortFunction : public exec::VectorFunction {
   /// and 'offsets' vectors that control where output arrays start and end
   /// remain the same in the output ArrayVector.
 
-  explicit ArraySortFunction(bool ascending, bool nullsFirst, bool throwOnNestedNull)
-      : ascending_{ascending}, nullsFirst_{nullsFirst}, throwOnNestedNull_(throwOnNestedNull) {}
+  explicit ArraySortFunction(
+      bool ascending,
+      bool nullsFirst,
+      bool throwOnNestedNull)
+      : ascending_{ascending},
+        nullsFirst_{nullsFirst},
+        throwOnNestedNull_(throwOnNestedNull) {}
 
   // Execute function.
   void apply(
@@ -480,6 +492,17 @@ std::shared_ptr<exec::VectorFunction> createAscNoThrowOnNestedNull(
   return create(inputArgs, true, false, false);
 }
 
+core::CallTypedExprPtr asArraySortCall(
+    const std::string& prefix,
+    const core::TypedExprPtr& expr) {
+  if (auto call = std::dynamic_pointer_cast<const core::CallTypedExpr>(expr)) {
+    if (call->name() == prefix + "array_sort") {
+      return call;
+    }
+  }
+  return nullptr;
+}
+
 } // namespace
 
 std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
@@ -490,7 +513,7 @@ std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
     bool throwOnNestedNull) {
   VELOX_CHECK_EQ(inputArgs.size(), 2);
   return std::make_shared<ArraySortLambdaFunction>(
-        ascending, throwOnNestedNull);    
+      ascending, throwOnNestedNull);
 }
 
 std::shared_ptr<exec::VectorFunction> makeArraySort(
@@ -506,6 +529,54 @@ std::shared_ptr<exec::VectorFunction> makeArraySort(
 std::vector<std::shared_ptr<exec::FunctionSignature>> arraySortSignatures(
     bool withComparator) {
   return signatures(withComparator);
+}
+
+core::TypedExprPtr rewriteArraySortCall(
+    const std::string& prefix,
+    const core::TypedExprPtr& expr,
+    const std::shared_ptr<SimpleComparisonChecker> checker) {
+  auto call = asArraySortCall(prefix, expr);
+  if (call == nullptr || call->inputs().size() != 2) {
+    return nullptr;
+  }
+
+  auto lambda =
+      dynamic_cast<const core::LambdaTypedExpr*>(call->inputs()[1].get());
+  VELOX_CHECK_NOT_NULL(lambda);
+
+  // Extract 'transform' from the comparison lambda:
+  //  (x, y) -> if(func(x) < func(y),...) ===> x -> func(x).
+  if (lambda->signature()->size() != 2) {
+    return nullptr;
+  }
+
+  static const std::string kNotSupported =
+      "array_sort with comparator lambda that cannot be rewritten "
+      "into a transform is not supported: {}";
+
+  if (auto comparison = checker->isSimpleComparison(prefix, *lambda)) {
+    std::string name = comparison->isLessThen ? prefix + "array_sort"
+                                              : prefix + "array_sort_desc";
+
+    if (!comparison->expr->type()->isOrderable()) {
+      VELOX_USER_FAIL(kNotSupported, lambda->toString())
+    }
+
+    auto rewritten = std::make_shared<core::CallTypedExpr>(
+        call->type(),
+        std::vector<core::TypedExprPtr>{
+            call->inputs()[0],
+            std::make_shared<core::LambdaTypedExpr>(
+                ROW({lambda->signature()->nameOf(0)},
+                    {lambda->signature()->childAt(0)}),
+                comparison->expr),
+        },
+        name);
+
+    return rewritten;
+  }
+
+  VELOX_USER_FAIL(kNotSupported, lambda->toString())
 }
 
 // An internal function to canonicalize an array to allow for comparisons. Used

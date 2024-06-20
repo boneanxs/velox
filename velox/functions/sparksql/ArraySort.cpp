@@ -14,24 +14,9 @@
  * limitations under the License.
  */
 #include "velox/functions/sparksql/ArraySort.h"
-#include "velox/functions/sparksql/SimpleComparisonChecker.h"
+#include "velox/functions/sparksql/SimpleComparisonMatcher.h"
 
 namespace facebook::velox::functions::sparksql {
-namespace {
-
-core::CallTypedExprPtr asArraySortCall(
-    const std::string& prefix,
-    const core::TypedExprPtr& expr) {
-  if (auto call = std::dynamic_pointer_cast<const core::CallTypedExpr>(expr)) {
-    if (call->name() == prefix + "array_sort") {
-      return call;
-    }
-  }
-  return nullptr;
-}
-
-} // namespace
-
 std::shared_ptr<exec::VectorFunction> makeArraySortAsc(
     const std::string& name,
     const std::vector<exec::VectorFunctionArg>& inputArgs,
@@ -121,55 +106,6 @@ std::shared_ptr<exec::VectorFunction> makeSortArray(
       /*ascending=*/ascending,
       /*nullsFirst=*/nullsFirst,
       /*throwOnNestedNull=*/false);
-}
-
-core::TypedExprPtr rewriteArraySortCall(
-    const std::string& prefix,
-    const core::TypedExprPtr& expr) {
-  auto call = asArraySortCall(prefix, expr);
-  if (call == nullptr || call->inputs().size() != 2) {
-    return nullptr;
-  }
-
-  auto lambda =
-      dynamic_cast<const core::LambdaTypedExpr*>(call->inputs()[1].get());
-  VELOX_CHECK_NOT_NULL(lambda);
-
-  // Extract 'transform' from the comparison lambda:
-  //  (x, y) -> if(func(x) < func(y),...) ===> x -> func(x).
-  if (lambda->signature()->size() != 2) {
-    return nullptr;
-  }
-
-  static const std::string kNotSupported =
-      "array_sort with comparator lambda that cannot be rewritten "
-      "into a transform is not supported: {}";
-
-  auto checker = std::make_unique<SparkSimpleComparisonChecker>();
-
-  if (auto comparison = checker->isSimpleComparison(prefix, *lambda)) {
-    std::string name = comparison->isLessThen ? prefix + "array_sort"
-                                              : prefix + "array_sort_desc";
-
-    if (!comparison->expr->type()->isOrderable()) {
-      VELOX_USER_FAIL(kNotSupported, lambda->toString())
-    }
-
-    auto rewritten = std::make_shared<core::CallTypedExpr>(
-        call->type(),
-        std::vector<core::TypedExprPtr>{
-            call->inputs()[0],
-            std::make_shared<core::LambdaTypedExpr>(
-                ROW({lambda->signature()->nameOf(0)},
-                    {lambda->signature()->childAt(0)}),
-                comparison->expr),
-        },
-        name);
-
-    return rewritten;
-  }
-
-  VELOX_USER_FAIL(kNotSupported, lambda->toString())
 }
 
 } // namespace facebook::velox::functions::sparksql

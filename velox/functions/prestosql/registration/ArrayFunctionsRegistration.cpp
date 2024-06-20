@@ -156,8 +156,9 @@ void registerArrayFunctions(const std::string& prefix) {
       arraySortSignatures(false),
       makeArraySortDesc);
 
-  exec::registerExpressionRewrite([prefix](const auto& expr) {
-    return rewriteArraySortCall(prefix, expr);
+  auto checker = std::make_shared<SimpleComparisonChecker>();
+  exec::registerExpressionRewrite([prefix, checker](const auto& expr) {
+    return rewriteArraySortCall(prefix, expr, checker);
   });
 
   VELOX_REGISTER_VECTOR_FUNCTION(udf_array_sum, prefix + "array_sum");

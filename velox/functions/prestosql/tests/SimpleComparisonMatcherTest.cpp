@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "velox/expression/VectorFunction.h"
-#include "velox/functions/prestosql/SimpleComparisonChecker.h"
+#include "velox/functions/lib/SimpleComparisonMatcher.h"
 #include "velox/functions/prestosql/registration/RegistrationFunctions.h"
 #include "velox/parse/Expressions.h"
 #include "velox/parse/ExpressionsParser.h"
@@ -83,7 +83,7 @@ TEST_F(SimpleComparisonMatcherTest, basic) {
   const auto inputType =
       ROW({"a"}, {ARRAY(ROW({"f", "g"}, {BIGINT(), BIGINT()}))});
 
-  auto checker = std::make_unique<PrestoSimpleComparisonChecker>();
+  auto checker = std::make_unique<SimpleComparisonChecker>();
 
   auto testMatcher = [&](const std::string& expr,
                          std::optional<bool> lessThan) {

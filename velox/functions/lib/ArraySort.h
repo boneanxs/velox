@@ -16,6 +16,7 @@
 #pragma once
 
 #include "velox/expression/VectorFunction.h"
+#include "velox/functions/lib/SimpleComparisonMatcher.h"
 
 namespace facebook::velox::functions {
 
@@ -54,5 +55,20 @@ std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
  */
 std::vector<std::shared_ptr<exec::FunctionSignature>> arraySortSignatures(
     bool withComparator);
+
+/// Analyzes array_sort(array, lambda) call to determine whether it can be
+/// re-written into a simpler call that specifies sort-by expression.
+///
+/// For example, rewrites
+///     array_sort(a, (x, y) -> if(length(x) < length(y), -1, if(length(x) >
+///     length(y), 1, 0))
+/// into
+///     array_sort(a, x -> length(x))
+///
+/// Returns new expression or nullptr if rewrite is not possible.
+core::TypedExprPtr rewriteArraySortCall(
+    const std::string& prefix,
+    const core::TypedExprPtr& expr,
+    const std::shared_ptr<SimpleComparisonChecker> checker);
 
 } // namespace facebook::velox::functions
