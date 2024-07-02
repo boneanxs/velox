@@ -77,6 +77,10 @@ class ComparisonMatcher : public Matcher {
     VELOX_CHECK_EQ(2, inputMatchers_.size());
   }
 
+  // Check if the given name is a comparison expression.
+  // Making this virtual to allow derived classes to override this since
+  // the name of the comparison expression can be different(e.g. in Spark `eq`
+  // is `equalTo`)
   virtual bool exprNameMatch(const std::string& name) {
     return name == prefix_ + "eq" || name == prefix_ + "lt" ||
         name == prefix_ + "gt";

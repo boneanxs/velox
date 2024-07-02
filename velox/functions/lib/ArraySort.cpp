@@ -183,9 +183,9 @@ void applyScalarType(
     if constexpr (kind == TypeKind::BOOLEAN) {
       uint64_t* rawBits = flatResults->template mutableRawValues<uint64_t>();
       const auto numOneBits = bits::countBits(rawBits, startRow, endRow);
-      const auto endZeroRow = endRow - numOneBits;
 
       if (ascending) {
+        const auto endZeroRow = endRow - numOneBits;
         bits::fillBits(rawBits, startRow, endZeroRow, false);
         bits::fillBits(rawBits, endZeroRow, endRow, true);
       } else {
@@ -517,9 +517,9 @@ std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
 }
 
 std::shared_ptr<exec::VectorFunction> makeArraySort(
-    const std::string& name,
+    const std::string& /*name*/,
     const std::vector<exec::VectorFunctionArg>& inputArgs,
-    const core::QueryConfig& config,
+    const core::QueryConfig& /*config*/,
     bool ascending,
     bool nullsFirst,
     bool throwOnNestedNull) {

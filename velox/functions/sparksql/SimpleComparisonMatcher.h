@@ -20,6 +20,12 @@
 namespace facebook::velox::functions::sparksql {
 using namespace facebook::velox::functions;
 
+namespace {
+const std::string eq = "equalto";
+const std::string lt = "lessthan";
+const std::string gt = "greaterthan";
+} // namespace
+
 class SparkComparisonMatcher : public ComparisonMatcher {
  public:
   SparkComparisonMatcher(
@@ -29,12 +35,14 @@ class SparkComparisonMatcher : public ComparisonMatcher {
       : ComparisonMatcher(prefix, inputMatchers, op) {}
 
   bool exprNameMatch(const std::string& name) override {
-    return name == prefix_ + "equalto" || name == prefix_ + "lessthan" ||
-        name == prefix_ + "greaterthan";
+    return name == prefix_ + eq || name == prefix_ + lt || name == prefix_ + gt;
   }
 };
 
 class SparkSimpleComparisonChecker : public SimpleComparisonChecker {
+ public:
+  ~SparkSimpleComparisonChecker() override = default;
+
  protected:
   MatcherPtr comparison(
       const std::string& prefix,
@@ -46,19 +54,16 @@ class SparkSimpleComparisonChecker : public SimpleComparisonChecker {
   }
 
   std::string eqName(const std::string& prefix) override {
-    return prefix + "equalto";
+    return prefix + eq;
   }
 
   std::string ltName(const std::string& prefix) override {
-    return prefix + "lessthan";
+    return prefix + lt;
   }
 
   std::string gtName(const std::string& prefix) override {
-    return prefix + "greaterthan";
+    return prefix + gt;
   }
-
- public:
-  ~SparkSimpleComparisonChecker() override = default;
 };
 
 } // namespace facebook::velox::functions::sparksql

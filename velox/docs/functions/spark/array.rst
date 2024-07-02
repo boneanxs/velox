@@ -112,6 +112,26 @@ Array Functions
         SELECT array_sort(array(NULL, 1, NULL)); -- [1, NULL, NULL]
         SELECT array_sort(array(NULL, 2, 1)); -- [1, 2, NULL]
 
+.. spark:function:: array_sort(array(T), function(T,U)) -> array(T)
+    :noindex:
+
+    Returns the array sorted by values computed using specified lambda in ascending
+    order. U must be an orderable type. Null elements will be placed at the end of
+    the returned array. ::
+
+        SELECT array_sort(array('cat', 'leopard', 'mouse'), x -> length(x)); -- ['cat', 'mouse', 'leopard']
+
+.. spark:function:: array_sort(array(T), function(T,T,U)) -> array(T)
+    :noindex:
+    
+    Returns the array sorted by values computed using specified lambda in ascending
+    order. U must be an orderable type. Null elements will be placed at the end of
+    the returned array.
+    The function attempts to analyze the lambda function and rewrite it into a simpler call that 
+    specifies the sort-by expression(like array_sort(array(T), function(T,U)) -> array(T) mentioned above). ::
+
+        SELECT array_sort(array('cat', 'leopard', 'mouse'), (left, right) -> if(length(left) > length(right), 1, if(length(left) < length(right), -1, 0))); -- ['cat', 'mouse', 'leopard']
+
 .. spark::function:: arrays_zip(array(T), array(U),..) -> array(row(T,U, ...))
 
     Returns the merge of the given arrays, element-wise into a single array of rows.
