@@ -77,10 +77,8 @@ class ComparisonMatcher : public Matcher {
     VELOX_CHECK_EQ(2, inputMatchers_.size());
   }
 
-  // Check if the given name is a comparison expression.
-  // Making this virtual to allow derived classes to override this since
-  // the name of the comparison expression can be different(e.g. in Spark `eq`
-  // is `equalTo`)
+  // Checks if the given name specifies a comparison expression. Can be
+  // overriden to use different function names for Spark.
   virtual bool exprNameMatch(const std::string& name) {
     return name == prefix_ + "eq" || name == prefix_ + "lt" ||
         name == prefix_ + "gt";
@@ -222,7 +220,7 @@ class SimpleComparisonChecker {
     return op == ltName(prefix) ? gtName(prefix) : ltName(prefix);
   }
 
-  /// Returns true for a < b -> -1.
+  // Returns true for a < b -> -1.
   bool isLessThen(
       const std::string& prefix,
       const std::string& operation,
@@ -262,6 +260,7 @@ class SimpleComparisonChecker {
 
  public:
   virtual ~SimpleComparisonChecker() = default;
+
   /// Given a lambda expression, checks it if represents a simple comparator and
   /// returns the summary of the same.
   ///

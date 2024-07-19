@@ -246,7 +246,7 @@ class ArraySortFunction : public exec::VectorFunction {
       bool throwOnNestedNull)
       : ascending_{ascending},
         nullsFirst_{nullsFirst},
-        throwOnNestedNull_(throwOnNestedNull) {}
+        throwOnNestedNull_{throwOnNestedNull} {}
 
   // Execute function.
   void apply(

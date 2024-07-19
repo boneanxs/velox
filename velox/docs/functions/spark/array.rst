@@ -104,29 +104,29 @@ Array Functions
 .. spark:function:: array_sort(array(E)) -> array(E)
 
     Returns an array which has the sorted order of the input array(E). The elements of array(E) must
-    be orderable. Null elements will be placed at the end of the returned array. ::
+    be orderable. Null/NaN elements will be placed at the end of the returned array. ::
 
         SELECT array_sort(array(1, 2, 3)); -- [1, 2, 3]
         SELECT array_sort(array(3, 2, 1)); -- [1, 2, 3]
         SELECT array_sort(array(2, 1, NULL); -- [1, 2, NULL]
         SELECT array_sort(array(NULL, 1, NULL)); -- [1, NULL, NULL]
         SELECT array_sort(array(NULL, 2, 1)); -- [1, 2, NULL]
+        SELECT array_sort(array(4.0, float('nan'), 3.0)); -- [3.0, 4.0, NaN]
 
 .. spark:function:: array_sort(array(T), function(T,U)) -> array(T)
     :noindex:
 
     Returns the array sorted by values computed using specified lambda in ascending
-    order. U must be an orderable type. Null elements will be placed at the end of
-    the returned array. ::
+    order. ``U`` must be an orderable type. If the value from the lambda function is NULL, the element will be placed at the end.  ::
 
         SELECT array_sort(array('cat', 'leopard', 'mouse'), x -> length(x)); -- ['cat', 'mouse', 'leopard']
+        SELECT array_sort(array(6.0, NULL, 4.0), x -> length(x)); -- [4.0, 6.0, NULL]
 
 .. spark:function:: array_sort(array(T), function(T,T,U)) -> array(T)
     :noindex:
     
     Returns the array sorted by values computed using specified lambda in ascending
-    order. U must be an orderable type. Null elements will be placed at the end of
-    the returned array.
+    order. ``U`` must be an orderable type. If the value from the lambda function is NULL, the element will be placed at the end.
     The function attempts to analyze the lambda function and rewrite it into a simpler call that 
     specifies the sort-by expression(like array_sort(array(T), function(T,U)) -> array(T) mentioned above). ::
 

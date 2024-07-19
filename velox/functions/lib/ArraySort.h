@@ -20,14 +20,14 @@
 
 namespace facebook::velox::functions {
 
-/**
- * @param ascending If true, sort in ascending order; otherwise, sort in
- * descending order.
- * @param nullsFirst If true, nulls are placed first; otherwise, nulls are
- * placed last.
- * @param throwOnNestedNull If true, throw an exception if a nested null is
- * encountered.
- */
+/// Make array_sort function.
+///
+/// @param ascending If true, sort in ascending order; otherwise, sort in
+/// descending order.
+/// @param nullsFirst If true, nulls are placed first; otherwise, nulls are
+/// placed last.
+/// @param throwOnNestedNull If true, throw an exception if a nested null is
+/// encountered.
 std::shared_ptr<exec::VectorFunction> makeArraySort(
     const std::string& name,
     const std::vector<exec::VectorFunctionArg>& inputArgs,
@@ -36,12 +36,12 @@ std::shared_ptr<exec::VectorFunction> makeArraySort(
     bool nullsFirst,
     bool throwOnNestedNull);
 
-/**
- * @param ascending If true, sort in ascending order; otherwise, sort in
- * descending order.
- * @param throwOnNestedNull If true, throw an exception if a nested null is
- * encountered.
- */
+/// Make array_sort with a lambda function.
+///
+/// @param ascending If true, sort in ascending order; otherwise, sort in
+/// descending order.
+/// @param throwOnNestedNull If true, throw an exception if a nested null is
+/// encountered.
 std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
     const std::string& name,
     const std::vector<exec::VectorFunctionArg>& inputArgs,
@@ -49,10 +49,10 @@ std::shared_ptr<exec::VectorFunction> makeArraySortLambdaFunction(
     bool ascending,
     bool throwOnNestedNull);
 
-/**
- * @param withComparator If true, includes a signature for sorting with a
- * comparator function.
- */
+/// Signatures for array_sort function.
+///
+/// @param withComparator If true, includes a signature for sorting with a
+/// comparator function.
 std::vector<std::shared_ptr<exec::FunctionSignature>> arraySortSignatures(
     bool withComparator);
 
